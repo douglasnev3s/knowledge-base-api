@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import routes from './routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,16 +13,11 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 
-// Test route
-app.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Knowledge Base API is running',
-    timestamp: new Date().toISOString()
-  });
-});
+// Routes
+app.use('/api', routes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/health`);
+  console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
 });

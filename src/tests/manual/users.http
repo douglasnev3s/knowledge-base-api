@@ -1,0 +1,53 @@
+### Health Check
+GET http://localhost:3000/api/health
+
+### List all users
+GET http://localhost:3000/api/users
+
+### Create user - Admin
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@email.com",
+  "role": "Admin"
+}
+
+### Create user - Editor
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Mary Smith",
+  "email": "mary@email.com",
+  "role": "Editor"
+}
+
+### Get user by ID (replace with actual ID from create response)
+GET http://localhost:3000/api/users/{USER_ID}
+
+### Get user by email
+GET http://localhost:3000/api/users/email/john@email.com
+
+### Update user (replace with actual ID)
+PUT http://localhost:3000/api/users/{USER_ID}
+Content-Type: application/json
+
+{
+  "name": "John Smith Updated",
+  "role": "Viewer"
+}
+
+### Delete user (replace with actual ID)
+DELETE http://localhost:3000/api/users/{USER_ID}
+
+### Validation test - Invalid data
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "invalid_email",
+  "role": "InvalidRole"
+}
