@@ -1,0 +1,89 @@
+### List all resources
+GET http://localhost:3000/api/resources
+
+### Create video resource
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://www.youtube.com/watch?v=W6NZfCO5SIk",
+  "description": "JavaScript Tutorial for Beginners",
+  "type": "video"
+}
+
+### Create article resource
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+  "description": "MDN JavaScript Documentation",
+  "type": "article"
+}
+
+### Create PDF resource
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://eloquentjavascript.net/Eloquent_JavaScript.pdf",
+  "description": "Eloquent JavaScript Book PDF",
+  "type": "pdf"
+}
+
+### Get resource by ID
+GET http://localhost:3000/api/resources/{RESOURCE_ID}
+
+### Update resource
+PUT http://localhost:3000/api/resources/{RESOURCE_ID}
+Content-Type: application/json
+
+{
+  "description": "Updated: JavaScript Tutorial for Beginners - Complete Course",
+  "type": "video"
+}
+
+### Delete resource
+DELETE http://localhost:3000/api/resources/{RESOURCE_ID}
+
+### Get resources by topic
+GET http://localhost:3000/api/resources/topic/{TOPIC_ID}
+
+### Get resources by type - videos
+GET http://localhost:3000/api/resources/type/video
+
+### Get resources by type - articles
+GET http://localhost:3000/api/resources/type/article
+
+### Validation test - Invalid URL
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "invalid-url",
+  "description": "Test resource",
+  "type": "article"
+}
+
+### Validation test - Invalid type
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://example.com",
+  "description": "Test resource",
+  "type": "invalid-type"
+}
+
+### Validation test - Missing fields
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+
+{
+  "url": "https://example.com"
+}
