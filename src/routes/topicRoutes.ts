@@ -11,5 +11,6 @@ router.put('/:id', topicController.updateTopic);
 router.delete('/:id', topicController.deleteTopic);
 router.get('/:id/versions', topicController.getTopicVersions);
 router.get('/:id/versions/:version', topicController.getTopicVersion);
+router.get('/:id/tree', topicController.getTopicTree);
 
 export default router;

@@ -1,5 +1,5 @@
 import { BaseRepository } from './BaseRepository';
-import { ITopic, ICreateTopicDto, IUpdateTopicDto } from '../models/interfaces';
+import { ITopic, ICreateTopicDto, IUpdateTopicDto, ITopicTree } from '../models/interfaces';
 import { TopicVersionRepository } from './TopicVersionRepository';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -131,5 +131,33 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
     return topics.filter(topic => 
       topic.name.toLowerCase().includes(name.toLowerCase())
     );
+  }
+
+  async buildTopicTree(topicId: string): Promise<ITopicTree | null> {
+    const topic = await this.findById(topicId);
+    if (!topic) return null;
+
+    const children = await this.findByParentId(topicId);
+    
+    const childTrees: ITopicTree[] = [];
+    for (const child of children) {
+      const childTree = await this.buildTopicTree(child.id);
+      if (childTree) {
+        childTrees.push(childTree);
+      }
+    }
+
+    const topicTree: ITopicTree = {
+      id: topic.id,
+      name: topic.name,
+      content: topic.content,
+      createdAt: topic.createdAt,
+      updatedAt: topic.updatedAt,
+      version: topic.version,
+      parentTopicId: topic.parentTopicId,
+      children: childTrees
+    };
+
+    return topicTree;
   }
 }

@@ -38,3 +38,14 @@ export interface ITopicVersion {
   updatedAt: Date;
   parentTopicId?: string;
 }
+
+export interface ITopicTree {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  version: number;
+  parentTopicId?: string;
+  children: ITopicTree[];
+}

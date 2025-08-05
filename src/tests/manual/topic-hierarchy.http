@@ -1,0 +1,64 @@
+### ========================================
+### TOPIC HIERARCHY - Recursive Tree Tests
+### ========================================
+
+### Create root topic - Programming
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Programming",
+  "content": "General programming concepts and languages"
+}
+
+### Create JavaScript topic (child of Programming)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "JavaScript",
+  "content": "JavaScript programming language",
+  "parentTopicId": "{PROGRAMMING_TOPIC_ID}"
+}
+
+### Create Variables topic (child of JavaScript)  
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Variables",
+  "content": "JavaScript variables and data types",
+  "parentTopicId": "{JAVASCRIPT_TOPIC_ID}"
+}
+
+### Create Functions topic (child of JavaScript)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Functions", 
+  "content": "JavaScript functions and scope",
+  "parentTopicId": "{JAVASCRIPT_TOPIC_ID}"
+}
+
+### Create Arrow Functions topic (child of Functions)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Arrow Functions",
+  "content": "ES6 arrow functions syntax and usage", 
+  "parentTopicId": "{FUNCTIONS_TOPIC_ID}"
+}
+
+### Get complete topic tree starting from Programming
+GET http://localhost:3000/api/topics/{PROGRAMMING_TOPIC_ID}/tree
+
+### Get subtree starting from JavaScript
+GET http://localhost:3000/api/topics/{JAVASCRIPT_TOPIC_ID}/tree
+
+### Get leaf topic tree (should have empty children)
+GET http://localhost:3000/api/topics/{VARIABLES_TOPIC_ID}/tree
+
+### Test with non-existent topic
+GET http://localhost:3000/api/topics/non-existent-id/tree

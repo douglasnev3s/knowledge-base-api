@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { TopicRepository } from '../repositories/TopicRepository';
 import { TopicVersionRepository } from '../repositories/TopicVersionRepository';
-import { ICreateTopicDto, IUpdateTopicDto } from '../models/interfaces';
+import { ICreateTopicDto, IUpdateTopicDto, ITopicTree } from '../models/interfaces';
 
 export class TopicController {
   private topicRepository: TopicRepository;
@@ -244,4 +244,52 @@ export class TopicController {
       });
     }
   };
+
+  // GET /topics/:id/tree
+  getTopicTree = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      const topicTree = await this.topicRepository.buildTopicTree(id);
+      
+      if (!topicTree) {
+        res.status(404).json({
+          success: false,
+          message: 'Topic not found'
+        });
+        return;
+      }
+
+      const countTopicsInTree = (tree: ITopicTree): number => {
+        return 1 + tree.children.reduce((sum, child) => sum + countTopicsInTree(child), 0);
+      };
+
+      const totalTopics = countTopicsInTree(topicTree);
+
+      res.json({
+        success: true,
+        data: topicTree,
+        metadata: {
+          totalTopics: totalTopics,
+          depth: this.calculateTreeDepth(topicTree),
+          hasChildren: topicTree.children.length > 0
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error building topic tree',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  };
+
+  private calculateTreeDepth(tree: ITopicTree): number {
+    if (tree.children.length === 0) {
+      return 1;
+    }
+    
+    const childDepths = tree.children.map(child => this.calculateTreeDepth(child));
+    return 1 + Math.max(...childDepths);
+  }
 }
