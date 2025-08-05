@@ -9,5 +9,7 @@ router.get('/:id', topicController.getTopicById);
 router.post('/', topicController.createTopic);
 router.put('/:id', topicController.updateTopic);
 router.delete('/:id', topicController.deleteTopic);
+router.get('/:id/versions', topicController.getTopicVersions);
+router.get('/:id/versions/:version', topicController.getTopicVersion);
 
 export default router;

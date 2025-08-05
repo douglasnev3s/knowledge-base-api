@@ -1,12 +1,15 @@
 import { Request, Response } from 'express';
 import { TopicRepository } from '../repositories/TopicRepository';
+import { TopicVersionRepository } from '../repositories/TopicVersionRepository';
 import { ICreateTopicDto, IUpdateTopicDto } from '../models/interfaces';
 
 export class TopicController {
   private topicRepository: TopicRepository;
+  private topicVersionRepository: TopicVersionRepository;
 
   constructor() {
     this.topicRepository = new TopicRepository();
+    this.topicVersionRepository = new TopicVersionRepository();
   }
 
   // GET /topics
@@ -169,6 +172,74 @@ export class TopicController {
       res.status(500).json({
         success: false,
         message: 'Error deleting topic',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  };
+
+  // GET /topics/:id/versions
+  getTopicVersions = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      const topic = await this.topicRepository.findById(id);
+      if (!topic) {
+        res.status(404).json({
+          success: false,
+          message: 'Topic not found'
+        });
+        return;
+      }
+
+      const versions = await this.topicVersionRepository.findByTopicId(id);
+      
+      res.json({
+        success: true,
+        data: versions,
+        count: versions.length,
+        currentVersion: topic.version
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching topic versions',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  };
+
+  // GET /topics/:id/versions/:version
+  getTopicVersion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id, version } = req.params;
+      const versionNumber = parseInt(version);
+      
+      if (isNaN(versionNumber) || versionNumber < 1) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid version number'
+        });
+        return;
+      }
+
+      const topicVersion = await this.topicVersionRepository.findByTopicIdAndVersion(id, versionNumber);
+      
+      if (!topicVersion) {
+        res.status(404).json({
+          success: false,
+          message: 'Topic version not found'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: topicVersion
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching topic version',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

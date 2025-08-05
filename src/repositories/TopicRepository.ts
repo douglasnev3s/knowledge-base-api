@@ -1,11 +1,14 @@
 import { BaseRepository } from './BaseRepository';
 import { ITopic, ICreateTopicDto, IUpdateTopicDto } from '../models/interfaces';
+import { TopicVersionRepository } from './TopicVersionRepository';
 import { v4 as uuidv4 } from 'uuid';
 
 export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUpdateTopicDto> {
-  
+  private topicVersionRepository: TopicVersionRepository;
+
   constructor() {
     super('topics.json');
+    this.topicVersionRepository = new TopicVersionRepository();
   }
 
   async create(data: ICreateTopicDto): Promise<ITopic> {
@@ -31,6 +34,14 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
     topics.push(newTopic);
     await this.writeData(topics);
     
+    await this.topicVersionRepository.create({
+      topicId: newTopic.id,
+      name: newTopic.name,
+      content: newTopic.content,
+      version: 1,
+      parentTopicId: newTopic.parentTopicId
+    });
+    
     return newTopic;
   }
 
@@ -40,30 +51,51 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
     
     if (topicIndex === -1) return null;
 
+    const currentTopic = topics[topicIndex];
+
     if (data.parentTopicId !== undefined) {
       if (data.parentTopicId && data.parentTopicId !== id) {
         const parentExists = topics.find(topic => topic.id === data.parentTopicId);
         if (!parentExists) {
           throw new Error('Parent topic not found');
         }
-
+        
         if (await this.wouldCreateCircularReference(id, data.parentTopicId, topics)) {
           throw new Error('Circular reference detected');
         }
       }
     }
 
+    const newVersion = currentTopic.version + 1;
     const updatedTopic: ITopic = {
-      ...topics[topicIndex],
+      ...currentTopic,
       ...data,
-      version: topics[topicIndex].version + 1,
+      version: newVersion,
       updatedAt: new Date()
     };
 
     topics[topicIndex] = updatedTopic;
     await this.writeData(topics);
     
+    await this.topicVersionRepository.create({
+      topicId: updatedTopic.id,
+      name: updatedTopic.name,
+      content: updatedTopic.content,
+      version: newVersion,
+      parentTopicId: updatedTopic.parentTopicId
+    });
+    
     return updatedTopic;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const deleted = await super.delete(id);
+    
+    if (deleted) {
+      await this.topicVersionRepository.deleteByTopicId(id);
+    }
+    
+    return deleted;
   }
 
   private async wouldCreateCircularReference(

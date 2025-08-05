@@ -5,12 +5,20 @@ export interface ITopic {
   createdAt: Date;
   updatedAt: Date;
   version: number;
-  parentTopicId?: string; // ? = opcional (null for root topics)
+  parentTopicId?: string;
 }
 
 export interface ICreateTopicDto {
   name: string;
   content: string;
+  parentTopicId?: string;
+}
+
+export interface ICreateTopicVersionDto {
+  topicId: string;
+  name: string;
+  content: string;
+  version: number;
   parentTopicId?: string;
 }
 

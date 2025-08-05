@@ -10,6 +10,38 @@ Content-Type: application/json
   "content": "Introduction to JavaScript programming language"
 }
 
+### Update topic (creates version 2)
+PUT http://localhost:3000/api/topics/{TOPIC_ID}
+Content-Type: application/json
+
+{
+  "name": "Advanced JavaScript Fundamentals",
+  "content": "Deep dive into JavaScript concepts and advanced features"
+}
+
+### Update topic again (creates version 3)
+PUT http://localhost:3000/api/topics/{TOPIC_ID}
+Content-Type: application/json
+
+{
+  "content": "Comprehensive guide to JavaScript programming with examples and best practices"
+}
+
+### Get current topic (always latest version)
+GET http://localhost:3000/api/topics/{TOPIC_ID}
+
+### Get all versions of a topic
+GET http://localhost:3000/api/topics/{TOPIC_ID}/versions
+
+### Get specific version of a topic
+GET http://localhost:3000/api/topics/{TOPIC_ID}/versions/1
+
+### Get another specific version
+GET http://localhost:3000/api/topics/{TOPIC_ID}/versions/2
+
+### Test invalid version number
+GET http://localhost:3000/api/topics/{TOPIC_ID}/versions/999
+
 ### Create child topic
 POST http://localhost:3000/api/topics
 Content-Type: application/json
@@ -17,22 +49,10 @@ Content-Type: application/json
 {
   "name": "Variables and Data Types",
   "content": "Understanding JavaScript variables and data types",
-  "parentTopicId": "79f33f2b-ee52-4888-ad6b-c51572a424ac"
+  "parentTopicId": "{PARENT_TOPIC_ID}"
 }
 
-### Get topic by ID (replace with actual ID)
-GET http://localhost:3000/api/topics/{TOPIC_ID}
-
-### Update topic (replace with actual ID) - No versioning system yet.
-PUT http://localhost:3000/api/topics/{TOPIC_ID}
-Content-Type: application/json
-
-{
-  "name": "Advanced JavaScript Fundamentals",
-  "content": "Deep dive into JavaScript concepts"
-}
-
-### Delete topic
+### Delete topic (should also delete all versions)
 DELETE http://localhost:3000/api/topics/{TOPIC_ID}
 
 ### Validation test - Missing fields
@@ -41,12 +61,4 @@ Content-Type: application/json
 
 {
   "name": ""
-}
-
-### Test circular reference (should fail)
-PUT http://localhost:3000/api/topics/{CHILD_ID}
-Content-Type: application/json
-
-{
-  "parentTopicId": "{PARENT_OF_CHILD_ID}"
 }
