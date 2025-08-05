@@ -40,6 +40,5 @@ pids/
 coverage/
 
 # Data files (nosso JSON database)
-data/
 *.db
 *.sqlite
