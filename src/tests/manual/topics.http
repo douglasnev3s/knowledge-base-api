@@ -1,0 +1,52 @@
+### List all topics
+GET http://localhost:3000/api/topics
+
+### Create root topic
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "JavaScript Fundamentals",
+  "content": "Introduction to JavaScript programming language"
+}
+
+### Create child topic
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Variables and Data Types",
+  "content": "Understanding JavaScript variables and data types",
+  "parentTopicId": "79f33f2b-ee52-4888-ad6b-c51572a424ac"
+}
+
+### Get topic by ID (replace with actual ID)
+GET http://localhost:3000/api/topics/{TOPIC_ID}
+
+### Update topic (replace with actual ID) - No versioning system yet.
+PUT http://localhost:3000/api/topics/{TOPIC_ID}
+Content-Type: application/json
+
+{
+  "name": "Advanced JavaScript Fundamentals",
+  "content": "Deep dive into JavaScript concepts"
+}
+
+### Delete topic
+DELETE http://localhost:3000/api/topics/{TOPIC_ID}
+
+### Validation test - Missing fields
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+### Test circular reference (should fail)
+PUT http://localhost:3000/api/topics/{CHILD_ID}
+Content-Type: application/json
+
+{
+  "parentTopicId": "{PARENT_OF_CHILD_ID}"
+}
