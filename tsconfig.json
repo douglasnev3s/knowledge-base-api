@@ -11,7 +11,7 @@
     "target": "ES2020",
     // For nodejs:
     "lib": ["ES2020"],
-    "types": ["node"],
+    "types": ["node", "jest"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
