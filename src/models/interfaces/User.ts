@@ -10,6 +10,7 @@ export interface IUser {
   email: string;
   role: UserRole;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ICreateUserDto {
