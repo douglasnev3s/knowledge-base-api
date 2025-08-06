@@ -1,0 +1,88 @@
+### ========================================
+### SHORTEST PATH ALGORITHM TESTS
+### ========================================
+
+### Create test hierarchy first
+### Programming
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Programming",
+  "content": "Root programming topic"
+}
+
+### JavaScript (child of Programming)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "JavaScript",
+  "content": "JavaScript programming language",
+  "parentTopicId": "{PROGRAMMING_ID}"
+}
+
+### Python (child of Programming)  
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Python",
+  "content": "Python programming language",
+  "parentTopicId": "{PROGRAMMING_ID}"
+}
+
+### Variables (child of JavaScript)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Variables",
+  "content": "JavaScript variables",
+  "parentTopicId": "{JAVASCRIPT_ID}"
+}
+
+### Functions (child of JavaScript)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Functions",
+  "content": "JavaScript functions",
+  "parentTopicId": "{JAVASCRIPT_ID}"
+}
+
+### Arrow Functions (child of Functions)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+
+{
+  "name": "Arrow Functions",
+  "content": "ES6 arrow functions",
+  "parentTopicId": "{FUNCTIONS_ID}"
+}
+
+### ========================================
+### SHORTEST PATH TESTS
+### ========================================
+
+### Test 1: Direct parent-child (distance = 1)
+GET http://localhost:3000/api/topics/path/{PROGRAMMING_ID}/{JAVASCRIPT_ID}
+
+### Test 2: Sibling topics (distance = 2, via parent)
+GET http://localhost:3000/api/topics/path/{JAVASCRIPT_ID}/{PYTHON_ID}
+
+### Test 3: Deep hierarchy (distance = 3)
+GET http://localhost:3000/api/topics/path/{VARIABLES_ID}/{ARROW_FUNCTIONS_ID}
+
+### Test 4: Same topic (distance = 0)
+GET http://localhost:3000/api/topics/path/{JAVASCRIPT_ID}/{JAVASCRIPT_ID}
+
+### Test 5: Child to grandparent (distance = 3)
+GET http://localhost:3000/api/topics/path/{ARROW_FUNCTIONS_ID}/{PROGRAMMING_ID}
+
+### Test 6: Non-existent path (should return 404)
+GET http://localhost:3000/api/topics/path/non-existent-1/non-existent-2
+
+### Test 7: One topic exists, other doesn't
+GET http://localhost:3000/api/topics/path/{JAVASCRIPT_ID}/non-existent

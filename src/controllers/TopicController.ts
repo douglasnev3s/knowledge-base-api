@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { TopicRepository } from '../repositories/TopicRepository';
 import { TopicVersionRepository } from '../repositories/TopicVersionRepository';
-import { ICreateTopicDto, IUpdateTopicDto, ITopicTree } from '../models/interfaces';
+import { ICreateTopicDto, IUpdateTopicDto, ITopicTree, ITopicPath } from '../models/interfaces';
 
 export class TopicController {
   private topicRepository: TopicRepository;
@@ -292,4 +292,46 @@ export class TopicController {
     const childDepths = tree.children.map(child => this.calculateTreeDepth(child));
     return 1 + Math.max(...childDepths);
   }
+
+  // GET /topics/path/:startId/:endId
+  getShortestPath = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { startId, endId } = req.params;
+      
+      if (!startId || !endId) {
+        res.status(400).json({
+          success: false,
+          message: 'Start ID and End ID are required'
+        });
+        return;
+      }
+
+      const pathResult: ITopicPath = await this.topicRepository.findShortestPath(startId, endId);
+      
+      if (!pathResult.found) {
+        res.status(404).json({
+          success: false,
+          message: 'No path found between the specified topics',
+          data: {
+            startTopicId: startId,
+            endTopicId: endId,
+            searched: true
+          }
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: pathResult,
+        message: `Shortest path found with distance ${pathResult.distance}`
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error finding shortest path',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  };
 }

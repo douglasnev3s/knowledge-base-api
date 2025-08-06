@@ -49,3 +49,12 @@ export interface ITopicTree {
   parentTopicId?: string;
   children: ITopicTree[];
 }
+
+export interface ITopicPath {
+  startTopicId: string;
+  endTopicId: string;
+  path: string[];
+  pathNames: string[];
+  distance: number;
+  found: boolean;
+}

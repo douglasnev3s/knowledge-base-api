@@ -1,5 +1,5 @@
 import { BaseRepository } from './BaseRepository';
-import { ITopic, ICreateTopicDto, IUpdateTopicDto, ITopicTree } from '../models/interfaces';
+import { ITopic, ICreateTopicDto, IUpdateTopicDto, ITopicTree, ITopicPath } from '../models/interfaces';
 import { TopicVersionRepository } from './TopicVersionRepository';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -159,5 +159,88 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
     };
 
     return topicTree;
+  }
+
+  async findShortestPath(startTopicId: string, endTopicId: string): Promise<ITopicPath> {
+    const result: ITopicPath = {
+      startTopicId,
+      endTopicId,
+      path: [],
+      pathNames: [],
+      distance: 0,
+      found: false
+    };
+
+    const allTopics = await this.readData();
+    const startTopic = allTopics.find(t => t.id === startTopicId);
+    const endTopic = allTopics.find(t => t.id === endTopicId);
+
+    if (!startTopic || !endTopic) {
+      return result;
+    }
+
+    if (startTopicId === endTopicId) {
+      result.path = [startTopicId];
+      result.pathNames = [startTopic.name];
+      result.distance = 0;
+      result.found = true;
+      return result;
+    }
+
+    const adjacencyMap = new Map<string, string[]>();
+    
+    allTopics.forEach(topic => {
+      adjacencyMap.set(topic.id, []);
+    });
+
+    allTopics.forEach(topic => {
+      if (topic.parentTopicId) {
+        const parentAdjacencies = adjacencyMap.get(topic.parentTopicId) || [];
+        parentAdjacencies.push(topic.id);
+        adjacencyMap.set(topic.parentTopicId, parentAdjacencies);
+
+        const childAdjacencies = adjacencyMap.get(topic.id) || [];
+        childAdjacencies.push(topic.parentTopicId);
+        adjacencyMap.set(topic.id, childAdjacencies);
+      }
+    });
+
+    const queue: Array<{ topicId: string; path: string[] }> = [];
+    const visited = new Set<string>();
+
+    queue.push({ topicId: startTopicId, path: [startTopicId] });
+    visited.add(startTopicId);
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const { topicId, path } = current;
+
+      if (topicId === endTopicId) {
+        const topicNames = path.map(id => {
+          const topic = allTopics.find(t => t.id === id);
+          return topic?.name || id;
+        });
+
+        result.path = path;
+        result.pathNames = topicNames;
+        result.distance = path.length - 1;
+        result.found = true;
+        return result;
+      }
+
+      const neighbors = adjacencyMap.get(topicId) || [];
+      
+      for (const neighborId of neighbors) {
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
+          queue.push({
+            topicId: neighborId,
+            path: [...path, neighborId]
+          });
+        }
+      }
+    }
+
+    return result;
   }
 }
