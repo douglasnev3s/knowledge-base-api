@@ -4,7 +4,7 @@ export class EditorPermissionStrategy implements IPermissionStrategy {
   canCreateUsers(): boolean { return false; }
   canUpdateUsers(): boolean { return false; }
   canDeleteUsers(): boolean { return false; }
-  canViewUsers(): boolean { return true; }
+  canViewUsers(): boolean { return false; }
   
   canCreateTopics(): boolean { return true; }
   canUpdateTopics(): boolean { return true; }
