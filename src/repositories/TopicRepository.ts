@@ -119,7 +119,12 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
 
   async findByParentId(parentId: string | null): Promise<ITopic[]> {
     const topics = await this.readData();
-    return topics.filter(topic => topic.parentTopicId === parentId);
+    
+    if (parentId === null) {
+      return topics.filter(topic => !topic.parentTopicId);
+    } else {
+      return topics.filter(topic => topic.parentTopicId === parentId);
+    }
   }
 
   async findRootTopics(): Promise<ITopic[]> {

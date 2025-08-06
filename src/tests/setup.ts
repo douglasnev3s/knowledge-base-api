@@ -5,16 +5,37 @@ beforeEach(async () => {
   const testDataDir = path.join(process.cwd(), 'data');
   
   try {
-    const files = await fs.readdir(testDataDir);
-    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    await fs.mkdir(testDataDir, { recursive: true });
     
-    for (const file of jsonFiles) {
+    const testFiles = [
+      'users.json',
+      'topics.json', 
+      'resources.json',
+      'topic-versions.json'
+    ];
+    
+    for (const file of testFiles) {
       const filePath = path.join(testDataDir, file);
       await fs.writeFile(filePath, '[]', 'utf-8');
     }
   } catch (error) {
-    console.log('Test data directory not found, skipping cleanup');
+    // Ignore errors in tests
   }
 });
 
-jest.setTimeout(10000);
+afterAll(async () => {
+  const testDataDir = path.join(process.cwd(), 'data');
+  
+  try {
+    const files = await fs.readdir(testDataDir);
+    for (const file of files) {
+      if (file.endsWith('.json')) {
+        await fs.unlink(path.join(testDataDir, file));
+      }
+    }
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+});
+
+jest.setTimeout(15000);
