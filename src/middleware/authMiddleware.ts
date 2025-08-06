@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { UserRepository } from '../repositories/UserRepository';
 import { PermissionFactory } from '../services/permissions';
 import { PermissionAction } from '../models/interfaces';
+import { UnauthorizedError, ForbiddenError } from '../utils/errors/CustomErrors';
+import { asyncHandler } from '../utils/asyncHandler';
 
 declare global {
   namespace Express {
@@ -22,68 +24,45 @@ export class AuthMiddleware {
     this.userRepository = new UserRepository();
   }
 
-  authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.headers['x-user-id'] as string;
-      
-      if (!userId) {
-        res.status(401).json({
-          success: false,
-          message: 'Authentication required. Please provide x-user-id header.'
-        });
-        return;
-      }
-
-      const user = await this.userRepository.findById(userId);
-      
-      if (!user) {
-        res.status(401).json({
-          success: false,
-          message: 'Invalid user credentials'
-        });
-        return;
-      }
-
-      const permissionContext = PermissionFactory.createPermissionContext(user.role);
-
-      req.user = {
-        id: user.id,
-        role: user.role,
-        permissions: permissionContext
-      };
-
-      next();
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Authentication error',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+  authenticate = asyncHandler(async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+    const userId = req.headers['x-user-id'] as string;
+    
+    if (!userId) {
+      throw new UnauthorizedError('Authentication required. Please provide x-user-id header.');
     }
-  };
+
+    const user = await this.userRepository.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedError('Invalid user credentials');
+    }
+
+    // Criar contexto de permissões
+    const permissionContext = PermissionFactory.createPermissionContext(user.role);
+
+    // Adicionar ao request
+    req.user = {
+      id: user.id,
+      role: user.role,
+      permissions: permissionContext
+    };
+
+    next();
+  });
 
   static requirePermission(action: PermissionAction) {
-    return (req: Request, res: Response, next: NextFunction): void => {
+    return asyncHandler(async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
       if (!req.user) {
-        res.status(401).json({
-          success: false,
-          message: 'Authentication required'
-        });
-        return;
+        throw new UnauthorizedError('Authentication required');
       }
 
       const hasPermission = req.user.permissions.hasPermission(action);
       
       if (!hasPermission) {
-        res.status(403).json({
-          success: false,
-          message: `Insufficient permissions. Required: ${action}`,
-          userRole: req.user.role
-        });
-        return;
+        throw new ForbiddenError(`Insufficient permissions. Required: ${action}`);
       }
 
       next();
-    };
+    });
   }
 }

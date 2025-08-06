@@ -1,6 +1,15 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
+const originalConsoleError = console.error;
+beforeAll(() => {
+  console.error = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+});
+
 beforeEach(async () => {
   const testDataDir = path.join(process.cwd(), 'data');
   

@@ -204,7 +204,7 @@ describe('User Routes Integration', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('Invalid role');
+      expect(response.body.message).toContain('Role must be one of');
     });
   });
 });
