@@ -1,14 +1,20 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
+import { AuthMiddleware } from '../middleware/authMiddleware';
+import { PermissionAction } from '../models/interfaces';
 
 const router = Router();
 const userController = new UserController();
+const authMiddleware = new AuthMiddleware();
 
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.get('/email/:email', userController.getUserByEmail);
-router.post('/', userController.createUser);
-router.put('/:id', userController.updateUser);
-router.delete('/:id', userController.deleteUser);
+router.use(authMiddleware.authenticate);
+
+router.get('/', AuthMiddleware.requirePermission(PermissionAction.VIEW_USERS), userController.getAllUsers);
+router.get('/:id', AuthMiddleware.requirePermission(PermissionAction.VIEW_USERS), userController.getUserById);
+router.get('/email/:email', AuthMiddleware.requirePermission(PermissionAction.VIEW_USERS), userController.getUserByEmail);
+router.post('/', AuthMiddleware.requirePermission(PermissionAction.CREATE_USERS), userController.createUser);
+router.put('/:id', AuthMiddleware.requirePermission(PermissionAction.UPDATE_USERS), userController.updateUser);
+router.delete('/:id', AuthMiddleware.requirePermission(PermissionAction.DELETE_USERS), userController.deleteUser);
+
 
 export default router;

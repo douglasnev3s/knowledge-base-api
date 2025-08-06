@@ -1,0 +1,67 @@
+### ===============================
+### TOPIC PERMISSIONS
+### ===============================
+
+### Editor can create topics
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+x-user-id: {EDITOR_USER_ID}
+
+{
+  "name": "Editor Topic",
+  "content": "Topic created by editor"
+}
+
+### Viewer cannot create topics (should fail)
+POST http://localhost:3000/api/topics
+Content-Type: application/json
+x-user-id: {VIEWER_USER_ID}
+
+{
+  "name": "Forbidden Topic",
+  "content": "This should fail"
+}
+
+### Viewer can view topics
+GET http://localhost:3000/api/topics
+x-user-id: {VIEWER_USER_ID}
+
+### Admin can use shortest path algorithm
+GET http://localhost:3000/api/topics/path/{TOPIC_ID_1}/{TOPIC_ID_2}
+x-user-id: {ADMIN_USER_ID}
+
+### Viewer can also use shortest path (read-only)
+GET http://localhost:3000/api/topics/path/{TOPIC_ID_1}/{TOPIC_ID_2}
+x-user-id: {VIEWER_USER_ID}
+
+### ===============================
+### RESOURCE PERMISSIONS  
+### ===============================
+
+### Editor can create resources
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+x-user-id: {EDITOR_USER_ID}
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://example.com",
+  "description": "Editor resource",
+  "type": "article"
+}
+
+### Viewer cannot create resources (should fail)
+POST http://localhost:3000/api/resources
+Content-Type: application/json
+x-user-id: {VIEWER_USER_ID}
+
+{
+  "topicId": "{TOPIC_ID}",
+  "url": "https://forbidden.com",
+  "description": "This should fail",
+  "type": "article"
+}
+
+### Viewer can view resources
+GET http://localhost:3000/api/resources
+x-user-id: {VIEWER_USER_ID}

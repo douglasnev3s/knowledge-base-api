@@ -1,0 +1,67 @@
+### Create Admin user first (without auth for setup)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Admin User",
+  "email": "admin@test.com",
+  "role": "Admin"
+}
+
+### Create Editor user
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Editor User", 
+  "email": "editor@test.com",
+  "role": "Editor"
+}
+
+### Create Viewer user
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Viewer User",
+  "email": "viewer@test.com", 
+  "role": "Viewer"
+}
+
+### ===============================
+### PERMISSION TESTS
+### ===============================
+
+### Admin can view users
+GET http://localhost:3000/api/users
+x-user-id: {ADMIN_USER_ID}
+
+### Editor cannot view users (should fail)
+GET http://localhost:3000/api/users
+x-user-id: {EDITOR_USER_ID}
+
+### Viewer cannot view users (should fail)
+GET http://localhost:3000/api/users
+x-user-id: {VIEWER_USER_ID}
+
+### Admin can create users
+POST http://localhost:3000/api/users
+Content-Type: application/json
+x-user-id: {ADMIN_USER_ID}
+
+{
+  "name": "New User",
+  "email": "new@test.com",
+  "role": "Viewer"
+}
+
+### Editor cannot create users (should fail)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+x-user-id: {EDITOR_USER_ID}
+
+{
+  "name": "Forbidden User",
+  "email": "forbidden@test.com",
+  "role": "Viewer"
+}

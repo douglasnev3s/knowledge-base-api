@@ -1,0 +1,18 @@
+### ===============================
+### PERMISSION CHECK TESTS
+### ===============================
+
+### Check Admin permissions (should have ALL permissions)
+GET http://localhost:3000/api/permissions/check
+x-user-id: {ADMIN_USER_ID}
+
+### Check Editor permissions (should NOT have user management)
+GET http://localhost:3000/api/permissions/check
+x-user-id: {EDITOR_USER_ID}
+
+### Check Viewer permissions (should only have read permissions)
+GET http://localhost:3000/api/permissions/check
+x-user-id: {VIEWER_USER_ID}
+
+### Test without authentication (should fail)
+GET http://localhost:3000/api/permissions/check
