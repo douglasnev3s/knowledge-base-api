@@ -1,23 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../../controllers/UserController';
-import { UserRepository } from '../../../repositories/UserRepository';
+import { UserService } from '../../../services/UserService';
 import { UserRole } from '../../../models/interfaces';
 
-// Mock do UserRepository
-jest.mock('../../../repositories/UserRepository');
+// Mock the UserService
+jest.mock('../../../services/UserService');
 
 describe('UserController', () => {
   let userController: UserController;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockUserService: jest.Mocked<UserService>;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: jest.MockedFunction<NextFunction>;
 
   beforeEach(() => {
-    mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-    userController = new UserController();
-    
-    (userController as any).userRepository = mockUserRepository;
+    mockUserService = new UserService() as jest.Mocked<UserService>;
+    userController = new UserController(mockUserService);
 
     mockRequest = {
       params: {},
@@ -54,11 +52,11 @@ describe('UserController', () => {
         }
       ];
 
-      mockUserRepository.findAll.mockResolvedValue(mockUsers);
+      mockUserService.getAllUsers.mockResolvedValue(mockUsers);
 
       await userController.getAllUsers(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockUserRepository.findAll).toHaveBeenCalledTimes(1);
+      expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
         data: mockUsers,
@@ -80,11 +78,11 @@ describe('UserController', () => {
       };
 
       mockRequest.params = { id: userId };
-      mockUserRepository.findById.mockResolvedValue(mockUser);
+      mockUserService.getUserById.mockResolvedValue(mockUser);
 
       await userController.getUserById(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
         data: mockUser
@@ -108,11 +106,11 @@ describe('UserController', () => {
       };
 
       mockRequest.body = userData;
-      mockUserRepository.create.mockResolvedValue(createdUser);
+      mockUserService.createUser.mockResolvedValue(createdUser);
 
       await userController.createUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockUserRepository.create).toHaveBeenCalledWith(userData);
+      expect(mockUserService.createUser).toHaveBeenCalledWith(userData);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,

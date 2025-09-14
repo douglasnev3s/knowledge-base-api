@@ -1,21 +1,18 @@
 import { Request, Response } from 'express';
-import { TopicRepository } from '../repositories/TopicRepository';
-import { TopicVersionRepository } from '../repositories/TopicVersionRepository';
-import { ICreateTopicDto, IUpdateTopicDto, ITopicTree, ITopicPath } from '../models/interfaces';
+import { TopicService } from '../services/TopicService';
+import { ICreateTopicDto, IUpdateTopicDto, ITopicPath } from '../models/interfaces';
 
 export class TopicController {
-  private topicRepository: TopicRepository;
-  private topicVersionRepository: TopicVersionRepository;
+  private topicService: TopicService;
 
-  constructor() {
-    this.topicRepository = new TopicRepository();
-    this.topicVersionRepository = new TopicVersionRepository();
+  constructor(topicService?: TopicService) {
+    this.topicService = topicService || new TopicService();
   }
 
   // GET /topics
   getAllTopics = async (_req: Request, res: Response): Promise<void> => {
     try {
-      const topics = await this.topicRepository.findAll();
+      const topics = await this.topicService.getAllTopics();
       res.json({
         success: true,
         data: topics,
@@ -34,21 +31,21 @@ export class TopicController {
   getTopicById = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const topic = await this.topicRepository.findById(id);
-      
-      if (!topic) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic not found'
-        });
-        return;
-      }
+      const topic = await this.topicService.getTopicById(id);
 
       res.json({
         success: true,
         data: topic
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error fetching topic',
@@ -61,29 +58,30 @@ export class TopicController {
   createTopic = async (req: Request, res: Response): Promise<void> => {
     try {
       const topicData: ICreateTopicDto = req.body;
-      
-      if (!topicData.name || !topicData.content) {
-        res.status(400).json({
-          success: false,
-          message: 'Name and content are required'
-        });
-        return;
-      }
+      const newTopic = await this.topicService.createTopic(topicData);
 
-      const newTopic = await this.topicRepository.create(topicData);
-      
       res.status(201).json({
         success: true,
         data: newTopic,
         message: 'Topic created successfully'
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'Parent topic not found') {
-        res.status(404).json({
-          success: false,
-          message: 'Parent topic not found'
-        });
-        return;
+      if (error instanceof Error) {
+        if (error.message.includes('required') || error.message.includes('Invalid') || error.message.includes('must be provided')) {
+          res.status(400).json({
+            success: false,
+            message: error.message
+          });
+          return;
+        }
+
+        if (error.message.includes('not found')) {
+          res.status(404).json({
+            success: false,
+            message: error.message
+          });
+          return;
+        }
       }
 
       res.status(500).json({
@@ -99,24 +97,7 @@ export class TopicController {
     try {
       const { id } = req.params;
       const updateData: IUpdateTopicDto = req.body;
-
-      if (!updateData.name && !updateData.content && updateData.parentTopicId === undefined) {
-        res.status(400).json({
-          success: false,
-          message: 'At least one field (name, content, parentTopicId) must be provided'
-        });
-        return;
-      }
-
-      const updatedTopic = await this.topicRepository.update(id, updateData);
-      
-      if (!updatedTopic) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic not found'
-        });
-        return;
-      }
+      const updatedTopic = await this.topicService.updateTopic(id, updateData);
 
       res.json({
         success: true,
@@ -125,18 +106,18 @@ export class TopicController {
       });
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === 'Parent topic not found') {
-          res.status(404).json({
+        if (error.message.includes('required') || error.message.includes('Invalid') || error.message.includes('Circular') || error.message.includes('must be provided')) {
+          res.status(400).json({
             success: false,
-            message: 'Parent topic not found'
+            message: error.message
           });
           return;
         }
-        
-        if (error.message === 'Circular reference detected') {
-          res.status(400).json({
+
+        if (error.message.includes('not found')) {
+          res.status(404).json({
             success: false,
-            message: 'Circular reference detected - cannot set parent topic'
+            message: error.message
           });
           return;
         }
@@ -154,21 +135,21 @@ export class TopicController {
   deleteTopic = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const deleted = await this.topicRepository.delete(id);
-      
-      if (!deleted) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic not found'
-        });
-        return;
-      }
+      await this.topicService.deleteTopic(id);
 
       res.json({
         success: true,
         message: 'Topic deleted successfully'
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error deleting topic',
@@ -181,18 +162,9 @@ export class TopicController {
   getTopicVersions = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      
-      const topic = await this.topicRepository.findById(id);
-      if (!topic) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic not found'
-        });
-        return;
-      }
+      const versions = await this.topicService.getTopicVersions(id);
+      const topic = await this.topicService.getTopicById(id);
 
-      const versions = await this.topicVersionRepository.findByTopicId(id);
-      
       res.json({
         success: true,
         data: versions,
@@ -200,6 +172,14 @@ export class TopicController {
         currentVersion: topic.version
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error fetching topic versions',
@@ -213,30 +193,31 @@ export class TopicController {
     try {
       const { id, version } = req.params;
       const versionNumber = parseInt(version);
-      
-      if (isNaN(versionNumber) || versionNumber < 1) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid version number'
-        });
-        return;
-      }
-
-      const topicVersion = await this.topicVersionRepository.findByTopicIdAndVersion(id, versionNumber);
-      
-      if (!topicVersion) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic version not found'
-        });
-        return;
-      }
+      const topicVersion = await this.topicService.getTopicVersion(id, versionNumber);
 
       res.json({
         success: true,
         data: topicVersion
       });
     } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid')) {
+          res.status(400).json({
+            success: false,
+            message: error.message
+          });
+          return;
+        }
+
+        if (error.message.includes('not found')) {
+          res.status(404).json({
+            success: false,
+            message: error.message
+          });
+          return;
+        }
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error fetching topic version',
@@ -249,33 +230,28 @@ export class TopicController {
   getTopicTree = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      
-      const topicTree = await this.topicRepository.buildTopicTree(id);
-      
-      if (!topicTree) {
-        res.status(404).json({
-          success: false,
-          message: 'Topic not found'
-        });
-        return;
-      }
+      const topicTree = await this.topicService.getTopicTree(id);
 
-      const countTopicsInTree = (tree: ITopicTree): number => {
-        return 1 + tree.children.reduce((sum, child) => sum + countTopicsInTree(child), 0);
-      };
-
-      const totalTopics = countTopicsInTree(topicTree);
+      const totalTopics = this.topicService.countTopicsInTree(topicTree);
 
       res.json({
         success: true,
         data: topicTree,
         metadata: {
           totalTopics: totalTopics,
-          depth: this.calculateTreeDepth(topicTree),
+          depth: this.topicService.calculateTreeDepth(topicTree),
           hasChildren: topicTree.children.length > 0
         }
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error building topic tree',
@@ -284,30 +260,12 @@ export class TopicController {
     }
   };
 
-  private calculateTreeDepth(tree: ITopicTree): number {
-    if (tree.children.length === 0) {
-      return 1;
-    }
-    
-    const childDepths = tree.children.map(child => this.calculateTreeDepth(child));
-    return 1 + Math.max(...childDepths);
-  }
-
   // GET /topics/path/:startId/:endId
   getShortestPath = async (req: Request, res: Response): Promise<void> => {
     try {
       const { startId, endId } = req.params;
-      
-      if (!startId || !endId) {
-        res.status(400).json({
-          success: false,
-          message: 'Start ID and End ID are required'
-        });
-        return;
-      }
+      const pathResult: ITopicPath = await this.topicService.getShortestPath(startId, endId);
 
-      const pathResult: ITopicPath = await this.topicRepository.findShortestPath(startId, endId);
-      
       if (!pathResult.found) {
         res.status(404).json({
           success: false,
@@ -327,6 +285,14 @@ export class TopicController {
         message: `Shortest path found with distance ${pathResult.distance}`
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('required')) {
+        res.status(400).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Error finding shortest path',
