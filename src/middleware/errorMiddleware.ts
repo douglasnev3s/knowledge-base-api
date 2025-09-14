@@ -13,7 +13,7 @@ export interface IErrorResponse {
 
 export class ErrorHandler {
   
-  // Middleware para capturar erros
+  // Middleware to catch errors
   static handleError = (error: Error, req: Request, res: Response, _next: NextFunction): void => {
     console.error('🚨 Error caught by middleware:', {
       message: error.message,
@@ -31,34 +31,34 @@ export class ErrorHandler {
       path: req.path
     };
 
-    // Se é um erro customizado
+    // If it's a custom error
     if (error instanceof BaseError) {
       errorResponse.statusCode = error.statusCode;
       errorResponse.message = error.message;
       
-      // Se é operacional, mostrar detalhes
+      // If operational, show details
       if (error.isOperational) {
         errorResponse.error = error.message;
       }
     } 
-    // Erros de validação do Express
+    // Express validation errors
     else if (error.name === 'ValidationError') {
       errorResponse.statusCode = 400;
       errorResponse.message = 'Validation failed';
       errorResponse.error = error.message;
     }
-    // Erro de JSON malformado
+    // Malformed JSON error
     else if (error instanceof SyntaxError && 'body' in error) {
       errorResponse.statusCode = 400;
       errorResponse.message = 'Invalid JSON format';
       errorResponse.error = 'Request body contains invalid JSON';
     }
-    // Erros não operacionais (bugs do sistema)
+    // Non-operational errors (system bugs)
     else {
       errorResponse.statusCode = 500;
       errorResponse.message = 'Internal server error';
       
-      // Em desenvolvimento, mostrar stack
+      // In development, show stack trace
       if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
         errorResponse.stack = error.stack;
         errorResponse.error = error.message;
@@ -68,7 +68,7 @@ export class ErrorHandler {
     res.status(errorResponse.statusCode).json(errorResponse);
   };
 
-  // Middleware para capturar rotas 404
+  // Middleware to handle 404 routes
   static handle404 = (req: Request, res: Response): void => {
     const errorResponse: IErrorResponse = {
       success: false,
@@ -82,13 +82,13 @@ export class ErrorHandler {
     res.status(404).json(errorResponse);
   };
 
-  // Logger de erros não operacionais
+  // Non-operational error logger
   static logError = (error: Error): void => {
     if (error instanceof BaseError && error.isOperational) {
-      // Erro operacional - log simples
+      // Operational error - simple log
       console.warn('⚠️ Operational error:', error.message);
     } else {
-      // Erro crítico - log completo
+      // Critical error - full log
       console.error('💥 Critical error:', {
         message: error.message,
         stack: error.stack,
@@ -97,7 +97,7 @@ export class ErrorHandler {
     }
   };
 
-  // Verificar se é erro confiável para crash
+  // Check if error is trusted for crash
   static isTrustedError = (error: Error): boolean => {
     if (error instanceof BaseError) {
       return error.isOperational;
