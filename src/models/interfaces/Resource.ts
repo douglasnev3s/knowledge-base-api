@@ -23,6 +23,7 @@ export interface ICreateResourceDto {
 }
 
 export interface IUpdateResourceDto {
+  topicId?: string;
   url?: string;
   description?: string;
   type?: ResourceType;

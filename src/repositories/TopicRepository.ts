@@ -13,7 +13,7 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
 
   async create(data: ICreateTopicDto): Promise<ITopic> {
     const topics = await this.readData();
-    
+
     if (data.parentTopicId) {
       const parentExists = topics.find(topic => topic.id === data.parentTopicId);
       if (!parentExists) {
@@ -33,15 +33,7 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
 
     topics.push(newTopic);
     await this.writeData(topics);
-    
-    await this.topicVersionRepository.create({
-      topicId: newTopic.id,
-      name: newTopic.name,
-      content: newTopic.content,
-      version: 1,
-      parentTopicId: newTopic.parentTopicId
-    });
-    
+
     return newTopic;
   }
 
@@ -76,15 +68,7 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
 
     topics[topicIndex] = updatedTopic;
     await this.writeData(topics);
-    
-    await this.topicVersionRepository.create({
-      topicId: updatedTopic.id,
-      name: updatedTopic.name,
-      content: updatedTopic.content,
-      version: newVersion,
-      parentTopicId: updatedTopic.parentTopicId
-    });
-    
+
     return updatedTopic;
   }
 
@@ -98,7 +82,7 @@ export class TopicRepository extends BaseRepository<ITopic, ICreateTopicDto, IUp
     return deleted;
   }
 
-  private async wouldCreateCircularReference(
+  async wouldCreateCircularReference(
     topicId: string, 
     newParentId: string, 
     topics: ITopic[]
