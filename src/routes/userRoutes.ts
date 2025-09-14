@@ -7,9 +7,8 @@ const router = Router();
 const userController = new UserController();
 const authMiddleware = new AuthMiddleware();
 
-if (process.env.NODE_ENV === 'test') {
-  router.post('/setup', userController.createUser);
-}
+// Setup endpoint for initial user creation (no auth required)
+router.post('/setup', userController.createUser);
 
 router.use(authMiddleware.authenticate);
 
